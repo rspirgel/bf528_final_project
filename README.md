@@ -1,6 +1,5 @@
 # Final Project 
 BF528: Applications in Translational Bioinformatics with Dr. Adam Labadorf (Spring 2021)
-Rebecca Spirgel
 
 Analysis of pancreatic single cell RNA-seq (scRNA-seq) data to determine differential gene expression, which was then used in conjuction with known marker genes to identify pancreatic cell subtypes.
 
