@@ -46,7 +46,6 @@ VlnPlot(pbmc_filtered, features=feats, ncol=3)
 #normalize data
 pbmc_filtered <- NormalizeData(pbmc_filtered)
 
-#pbmc_filtered <- FindVariableFeatures(pbmc_filtered, selection.method = "vst", nfeatures = 2000)
 pbmc_filtered <- FindVariableFeatures(
   pbmc_filtered,
   selection.method = "vst",
@@ -67,19 +66,16 @@ plot2
 all.genes <- rownames(pbmc_filtered)
 pbmc_filtered <- ScaleData(pbmc_filtered, features = all.genes)
 
-#PCA
-
+#create PCA
 pbmc_filtered <- RunPCA(pbmc_filtered, features = VariableFeatures(object = pbmc_filtered))
 VizDimLoadings(pbmc_filtered, dims = 1:5, reduction = "pca")
-
-
 DimPlot(pbmc_filtered, reduction = "pca")
 print(pbmc_filtered[["pca"]], dims = 1:5, nfeatures = 5)
 DimHeatmap(pbmc_filtered, dims = 1, cells = 500, balanced = TRUE)
 DimHeatmap(pbmc_filtered, dims = 1:5, cells = 500, balanced = TRUE)
 
 
-#determine dimensionality
+#determine dimensionality by UMAP
 pbmc_filtered <- JackStraw(pbmc_filtered, num.replicate = 100)
 pbmc_filtered <- ScoreJackStraw(pbmc_filtered, dims = 1:20)
 JackStrawPlot(pbmc_filtered, dims = 1:20)
@@ -98,32 +94,10 @@ tsne
 cell_count <- data.frame(table(Idents(pbmc_filtered)))
 ggplot(data=cell_count, aes(x=Var1, y=Freq)) +geom_text(aes(label=Freq), vjust=-0.3, size=3.5) +
   geom_bar(stat="identity",  fill="steelblue") + xlab("Cluster")
-#--------------------------------
-# cluster1.markers <- FindMarkers(pbmc_filtered, ident.1 = 1, min.pct = 0.25)
-# head(cluster1.markers, n = 5)
-# cluster2.markers <- FindMarkers(pbmc_filtered, ident.1 = 2, ident.2 = c(0, 3), min.pct = 0.25)
-# head(cluster2.markers, n = 5)
-# 
-# pbmc_filtered.markers <- FindAllMarkers(pbmc_filtered, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-# pbmc_filtered.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_logFC)
 
-#questions for jackie: cluster for prgrammer/analyst, how to use identified marker genes for assigning cell type
-#
 
+#visualize 
 deg <- FindAllMarkers(pbmc_filtered, max.p_val_adj = 0.05,logfc.threshold = 0.8) 
-
-print(FindAllMarkers(pbmc_filtered,features = 'GCG', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'INS', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'NKX6-1', logfc.threshold = 0.8, only.pos = TRUE))
-
-print(FindAllMarkers(pbmc_filtered,features = 'SST', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'PPY', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'GHRL', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'KRT19', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'CPA1', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'PDGFRB', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'PECAM1', logfc.threshold = 0.8, only.pos = TRUE))
-print(FindAllMarkers(pbmc_filtered,features = 'CD68', logfc.threshold = 0.8, only.pos = TRUE))
 
 
 gene_list <- c("GCG","INS","SST","PPY","GHRL","KRT19","CPA1","PDGFRB",
@@ -138,7 +112,7 @@ names(cluster_names) <- levels(pbmc_filtered)
 pbmc_filtered <-RenameIdents(pbmc_filtered,cluster_names)
 
 tsne <- DimPlot(pbmc_filtered, reduction = "tsne") 
-tsne
+
 
 #violin plot of gene expression
 VlnPlot(pbmc_filtered, features = 'INS')
@@ -148,6 +122,7 @@ print(x)
 print(VlnPlot(pbmc_filtered, features = x))
 }
 
+#create heatmaps for each cluster
 deg_by_cluster<-split(deg, deg$cluster)
 
 for (item in deg_by_cluster){
@@ -157,6 +132,7 @@ for (item in deg_by_cluster){
         + NoLegend())
 }
 
+#create heatmap for top5 genes and top3 genes
 top5 <- deg %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
 htmp<-DoHeatmap(pbmc_filtered, features = top5$gene) + NoLegend()
 htmp
@@ -165,6 +141,6 @@ FeaturePlot(pbmc_filtered, features = new_gene_list)
 cluster2.markers <- FindMarkers(pbmc_filtered, ident.1 = 2, min.pct = 0.25)
 
 top3 <- deg %>% group_by(cluster) %>% top_n(n = 3, wt = avg_log2FC)
-top3
+
 
 
